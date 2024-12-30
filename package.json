@@ -1,5 +1,5 @@
 {
-  "name": "vector-db",
+  "name": "entity-db",
   "version": "1.0.0",
   "description": "EntityDB is an in-browser vector database wrapping indexedDB and Transformers.js",
   "main": "src/index.js",
@@ -7,18 +7,20 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
+    "entity",
     "indexeddb",
     "vectors",
     "transformers",
     "huggingface",
-    "embedding"
+    "embedding",
+    "entitydb",
+    "entity-db"
   ],
-  "author": "Your Name",
+  "author": "babycommando",
   "license": "Apache-2.0",
   "dependencies": {
     "idb": "^8.0.1",
-    "@xenova/transformers": "^2.17.2" 
+    "@xenova/transformers": "^2.17.2"
   },
   "devDependencies": {}
 }
-

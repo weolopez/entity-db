@@ -21,7 +21,7 @@ An in-browser vector database wrapping indexedDB and Transformers.js
 To install **EntityDB** in your project, run:
 
 ```bash
-npm install vector-db
+npm install entity-db
 ```
 
 ## Usage
@@ -29,10 +29,10 @@ npm install vector-db
 ### Importing the Library
 
 ```js
-import { VectorDB } from "vector-db";
+import { EntityDB } from "entity-db";
 
 // Initialize the VectorDB instance
-const db = new VectorDB({ vectorPath: "embedding" });
+const db = new EntityDB({ vectorPath: "embedding" });
 ```
 
 ### Inserting Data with Automatic Embedding Generation

@@ -36,7 +36,7 @@ const getEmbeddingFromText = async (text, model = defaultModel) => {
   return Array.from(output.data);
 };
 
-class VectorDB {
+class EntityDB {
   constructor({ vectorPath, model = defaultModel }) {
     this.vectorPath = vectorPath;
     this.model = model;
@@ -45,7 +45,7 @@ class VectorDB {
 
   // Initialize the IndexedDB
   async _initDB() {
-    const db = await openDB("VectorDB", 1, {
+    const db = await openDB("EntityDB", 1, {
       upgrade(db) {
         if (!db.objectStoreNames.contains("vectors")) {
           db.createObjectStore("vectors", {
@@ -74,7 +74,7 @@ class VectorDB {
       const key = await store.add(record);
       return key;
     } catch (error) {
-      throw new Error(Error inserting data: ${error});
+      throw new Error(`Error inserting data: ${error}`);
     }
   }
 
@@ -88,7 +88,7 @@ class VectorDB {
       const key = await store.add(record);
       return key;
     } catch (error) {
-      throw new Error(Error inserting manual vectors: ${error});
+      throw new Error(`Error inserting manual vectors: ${error}`);
     }
   }
 
@@ -130,7 +130,7 @@ class VectorDB {
       similarities.sort((a, b) => b.similarity - a.similarity); // Sort by similarity (descending)
       return similarities.slice(0, limit); // Return the top N results based on limit
     } catch (error) {
-      throw new Error(Error querying vectors: ${error});
+      throw new Error(`Error querying vectors: ${error}`);
     }
   }
 
@@ -151,10 +151,10 @@ class VectorDB {
       similarities.sort((a, b) => b.similarity - a.similarity); // Sort by similarity (descending)
       return similarities.slice(0, limit); // Return the top N results based on limit
     } catch (error) {
-      throw new Error(Error querying manual vectors: ${error});
+      throw new Error(`Error querying manual vectors: ${error}`);
     }
   }
 }
 
-// Export VectorDB class
-export { VectorDB };
+// Export EntityDB class
+export { EntityDB };

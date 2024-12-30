@@ -24,6 +24,18 @@ To install **EntityDB** in your project, run:
 npm install entity-db
 ```
 
+```bash
+yarn install entity-db
+```
+
+```bash
+pnpm install entity-db
+```
+
+```bash
+bun install entity-db
+```
+
 ## Usage
 
 ### Importing the Library

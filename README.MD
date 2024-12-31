@@ -1,4 +1,4 @@
-# EntityDB
+# EntityDB - Decentralized Ai Memory: Storing Vectors In The Browser With EntityDB
 
 An in-browser vector database wrapping indexedDB and Transformers.js
 

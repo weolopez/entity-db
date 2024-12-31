@@ -67,10 +67,8 @@ await db.insert({
 You can query the database by providing a text, and EntityDB will return the most similar results based on cosine similarity.
 
 ```js
-await db.insert({
-  const results = await db.query("Find similar texts based on this query");
-  console.log(results);
-});
+const results = await db.query("Find similar texts based on this query");
+console.log(results);
 ```
 
 ### Inserting Manual Vectors

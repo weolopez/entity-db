@@ -44,7 +44,10 @@ bun add @babycommando/entity-db
 import { EntityDB } from "@babycommando/entity-db";
 
 // Initialize the VectorDB instance
-const db = new EntityDB({ vectorPath: "embedding" });
+const db = new EntityDB({
+  vectorPath: "db_name",
+  model: "Xenova/all-MiniLM-L6-v2",
+});
 ```
 
 ### Inserting Data with Automatic Embedding Generation
@@ -57,13 +60,13 @@ await db.insert({
 });
 ```
 
-### Querying the Database
+### Querying (Cosine Similarity)
 
 You can query the database by providing a text, and EntityDB will return the most similar results based on cosine similarity.
 
 ```js
 await db.insert({
-  const results = await db.query("Find me similar texts!");
+  const results = await db.query("Find similar texts based on this query");
   console.log(results);
 });
 ```
@@ -77,6 +80,24 @@ await db.insertManualVectors({
   text: "Another sample",
   embedding: [0.1, 0.2, 0.3, ...] // your precomputed embedding
 });
+```
+
+### Deleting Data
+
+You can delete a vector by its key.
+
+```js
+await db.delete(1);
+```
+
+### Querying Manual Vectors
+
+If you have precomputed vectors and want to query them directly, use the queryManualVectors method.
+
+```js
+  const queryVector = [0.1, 0.2, 0.3, ...]; // your precomputed query vector
+  const results = await db.queryManualVectors(queryVector);
+  console.log(results);
 ```
 
 #### For Nextjs

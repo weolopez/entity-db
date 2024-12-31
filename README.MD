@@ -1,6 +1,6 @@
-# EntityDB - Decentralized Ai Memory: Storing Vectors In The Browser With EntityDB
+# EntityDB - Decentralized Ai Memory
 
-An in-browser vector database wrapping indexedDB and Transformers.js
+### Storing Vector Embeddings In The Browser wrapping indexedDB and Transformers.js
 
 ![EntityDB](https://raw.githubusercontent.com/babycommando/entity-db/refs/heads/main/cover.gif)
 

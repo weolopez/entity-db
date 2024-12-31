@@ -49,14 +49,6 @@ const db = new EntityDB({ vectorPath: "embedding" });
 
 ### Inserting Data with Automatic Embedding Generation
 
-```js
-await db.insert({
-  text: "This is a sample text to embed",
-});
-```
-
-### Inserting Data with Automatic Embedding Generation
-
 You can insert data by simply passing a text field. The library will automatically generate embeddings using the specified transformer model.
 
 ```js

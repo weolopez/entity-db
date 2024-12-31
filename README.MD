@@ -16,6 +16,8 @@ An in-browser vector database wrapping indexedDB and Transformers.js
 - **Flexible**: Supports both automatic embedding generation and manual insertion of pre-computed embeddings.
 - **Lightweight**: No need for a server-side component or complex setup.
 
+![EntityDB_in_action](sc-db.png)
+
 ## Installation
 
 To install **EntityDB** in your project, run:

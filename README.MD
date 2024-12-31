@@ -2,7 +2,7 @@
 
 An in-browser vector database wrapping indexedDB and Transformers.js
 
-![EntityDB](/cover.gif)
+![EntityDB](https://raw.githubusercontent.com/babycommando/entity-db/refs/heads/main/cover.gif)
 
 ## Overview
 

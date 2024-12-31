@@ -25,15 +25,15 @@ npm install @babycommando/entity-db
 ```
 
 ```bash
-yarn install @babycommando/entity-db
+yarn add @babycommando/entity-db
 ```
 
 ```bash
-pnpm install @babycommando/entity-db
+pnpm add @babycommando/entity-db
 ```
 
 ```bash
-bun install @babycommando/entity-db
+bun add @babycommando/entity-db
 ```
 
 ## Usage

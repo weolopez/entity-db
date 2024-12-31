@@ -46,7 +46,7 @@ import { EntityDB } from "@babycommando/entity-db";
 // Initialize the VectorDB instance
 const db = new EntityDB({
   vectorPath: "db_name",
-  model: "Xenova/all-MiniLM-L6-v2",
+  model: "Xenova/all-MiniLM-L6-v2", // a HuggingFace embeddings model
 });
 ```
 

@@ -36,6 +36,19 @@ const getEmbeddingFromText = async (text, model = defaultModel) => {
   return Array.from(output.data);
 };
 
+// Binarizer function for dense vectors
+const binarizeVector = (vector, threshold = null) => {
+  if (threshold === null) {
+    const sorted = [...vector].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    threshold =
+      sorted.length % 2 === 0
+        ? (sorted[mid - 1] + sorted[mid]) / 2
+        : sorted[mid];
+  }
+  return vector.map((val) => (val >= threshold ? 1 : 0));
+};
+
 class EntityDB {
   constructor({ vectorPath, model = defaultModel }) {
     this.vectorPath = vectorPath;
@@ -75,6 +88,50 @@ class EntityDB {
       return key;
     } catch (error) {
       throw new Error(`Error inserting data: ${error}`);
+    }
+  }
+
+  async insertBinary(data) {
+    try {
+      let embedding = data[this.vectorPath];
+      if (data.text) {
+        embedding = await getEmbeddingFromText(data.text, this.model);
+      }
+      // Binarize the embedding
+      const binaryEmbedding = binarizeVector(embedding);
+
+      const db = await this.dbPromise;
+      const transaction = db.transaction("vectors", "readwrite");
+      const store = transaction.objectStore("vectors");
+      const record = { vector: binaryEmbedding, ...data };
+      const key = await store.add(record);
+      return key;
+    } catch (error) {
+      throw new Error(`Error inserting data: ${error}`);
+    }
+  }
+
+  async queryBinary(queryText, { limit = 10 } = {}) {
+    try {
+      // Get embeddings and binarize them
+      const queryVector = await getEmbeddingFromText(queryText, this.model);
+      const binaryQueryVector = binarizeVector(queryVector);
+
+      const db = await this.dbPromise;
+      const transaction = db.transaction("vectors", "readonly");
+      const store = transaction.objectStore("vectors");
+      const vectors = await store.getAll();
+
+      // Calculate similarity with binary vectors
+      const similarities = vectors.map((entry) => {
+        const similarity = cosineSimilarity(binaryQueryVector, entry.vector);
+        return { ...entry, similarity };
+      });
+
+      similarities.sort((a, b) => b.similarity - a.similarity); // Sort by similarity (descending)
+      return similarities.slice(0, limit); // Return the top N results
+    } catch (error) {
+      throw new Error(`Error querying binary vectors: ${error}`);
     }
   }
 

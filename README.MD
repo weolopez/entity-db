@@ -100,6 +100,40 @@ If you have precomputed vectors and want to query them directly, use the queryMa
   console.log(results);
 ```
 
+---
+
+## Experimental: Binary Vectors
+
+While querying vectors by cosine similarity is already extremely fast, sometimes you want to go faster than light. Binary vectors are simplified versions of dense vectors where each value is turned into either a 0 or a 1 by comparing it to the middle value (median). This makes them smaller to store and faster to compare, which helps when working with a lot of data.
+
+Note that this simplification can reduce the quality of the results because some detailed information in the original dense vector is lost. Use it for very long searches. For example, the set of vectors produced by _all-MiniLM-L6-v2_:
+
+`[ -0.020319879055023193,  0.07605013996362686, 0.020568927749991417, ...]`
+after being binarized becomes:
+`[ 0, 1, 1, ...]`
+
+### Inserting Data and Generate Binarized Embeddings
+
+To insert data to be vectorized and then binarized, use _insertBinary_.
+Note: to query over binarized vectors, use _queryBinary_.
+
+```js
+await db.insertBinary({
+  text: "This is a sample text to embed and binarize",
+});
+```
+
+### Query Binarized Embeddings (Cosine Similarity)
+
+To query over binarized vectors use _queryBinary_.
+
+```js
+const results = await db.queryBinary("Find similar texts based on this query");
+console.log(results);
+```
+
+---
+
 #### For Nextjs
 
 If you're using Next.js, you may need to configure Webpack to work with Transformers.js. Add the following to your next.config.js file:

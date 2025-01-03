@@ -167,6 +167,7 @@ console.log(results);
 
 Example of a binary hamming distance query over WebAssembly SIMD (+128 bits at a time, shorter CPU cicles):
 ![EntityDB_in_action_binary_wasm](sc-binary-wasm.png)
+The logs show offsets (0, 16, 32), which means the code processes 128 bits (16 bytes) at a time. Since the total vector is 384 bits, it takes 3 steps (384 ÷ 128 = 3), confirming 128-bit SIMD processing.
 
 ---
 

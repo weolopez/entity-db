@@ -126,7 +126,7 @@ await db.insertBinary({
 ### Query Binarized Embeddings (Hamming Distance)
 
 To query over binarized vectors use _queryBinary_.
-While cosine similarity measures the angle between two vectors in a multi-dimensional space, Hamming distance counts the number of positions where two binary vectors differ. It measures dissimilarity as a simple count of mismatches. For binarized vectors Hamming really the tool for the job.
+While cosine similarity measures the angle between two vectors in a multi-dimensional space, Hamming distance counts the number of positions where two binary vectors differ. It measures dissimilarity as a simple count of mismatches. For binarized vectors Hamming really is the tool for the job.
 
 ```js
 const results = await db.queryBinary("Find similar texts based on this query");

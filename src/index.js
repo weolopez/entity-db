@@ -66,6 +66,45 @@ const hammingDistance = (vectorA, vectorB) => {
   return Number(distance);
 };
 
+//Load Hamming Distance Over WASM SIMD (128 bits at a time - 2x faster than normal JS using BigUint64Array):
+//haming_distance_simd.wat script compiled to WASM and base64 encoded:
+const wasmBase64 =
+  "AGFzbQEAAAABDAJgAX8AYAN/f38BfwILAQNlbnYDbG9nAAADAgEBBQMBAAEHHQIGbWVtb3J5AgAQaGFtbWluZ19kaXN0YW5jZQABCoYBAYMBAQF/QQAhAwJAA0AgAkUEQAwCCyAAEAAgAyAA/QAEACAB/QAEAP1R/RsAaSAA/QAEACAB/QAEAP1R/RsBaSAA/QAEACAB/QAEAP1R/RsCaSAA/QAEACAB/QAEAP1R/RsDaWpqamohAyAAQRBqIQAgAUEQaiEBIAJBEGshAgwACwsgAwsAPQRuYW1lARgCAANsb2cBEGhhbW1pbmdfZGlzdGFuY2UCHAIAAAEEAARwdHJBAQRwdHJCAgNsZW4DBGRpc3Q=";
+
+function base64ToUint8Array(base64) {
+  if (typeof window !== "undefined") {
+    // Browser: Use atob to decode Base64
+    return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  } else {
+    // Node.js: Use Buffer to decode Base64
+    return Uint8Array.from(Buffer.from(base64, "base64"));
+  }
+}
+
+async function loadWasm() {
+  const wasmBinary = base64ToUint8Array(wasmBase64); // Decode Base64
+  const wasmModule = await WebAssembly.instantiate(wasmBinary, {
+    env: {
+      memory: new WebAssembly.Memory({ initial: 1 }),
+      log: (ptr) => console.log(`Processing pointer at offset: ${ptr}`),
+    },
+  });
+
+  // Check if memory is exported; if not, use the imported memory
+  const memory =
+    wasmModule.instance.exports.memory ||
+    wasmModule.instance.exports.env.memory;
+
+  if (!memory) {
+    throw new Error("WebAssembly module does not export or provide memory.");
+  }
+
+  return {
+    ...wasmModule.instance.exports,
+    memory, // Ensure memory is included
+  };
+}
+
 class EntityDB {
   constructor({ vectorPath, model = defaultModel }) {
     this.vectorPath = vectorPath;
@@ -232,6 +271,73 @@ class EntityDB {
       return distances.slice(0, limit);
     } catch (error) {
       throw new Error(`Error querying binary vectors: ${error}`);
+    }
+  }
+
+  /*Hamming Distance over WebAssembly SIMD:
+  The WebAssembly SIMD implementation processes 128 bits per iteration (via v128.xor) 
+  compared to 64 bits per iteration in the JavaScript implementation using BigUint64Array.
+  This alone gives a theoretical 2x speedup. 
+  
+  SIMD instructions execute XOR, popcount, and similar operations on multiple data lanes in parallel. 
+  This reduces the number of CPU cycles required for the same amount of work compared to sequential 
+  bitwise operations in JavaScript. SIMD in WebAssembly is likely 2x to 4x faster or more over big vectors.
+  */
+  async queryBinarySIMD(queryText, { limit = 10 } = {}) {
+    try {
+      const queryVector = await getEmbeddingFromText(queryText, this.model);
+      const binaryQueryVector = binarizeVector(queryVector);
+
+      const packedQueryVector = new BigUint64Array(
+        new ArrayBuffer(Math.ceil(binaryQueryVector.length / 64) * 8)
+      );
+      for (let i = 0; i < binaryQueryVector.length; i++) {
+        const bitIndex = i % 64;
+        const arrayIndex = Math.floor(i / 64);
+        if (binaryQueryVector[i] === 1) {
+          packedQueryVector[arrayIndex] |= 1n << BigInt(bitIndex);
+        }
+      }
+
+      console.log(
+        "Query Vector (binary):",
+        [...packedQueryVector].map((v) => v.toString(2))
+      );
+
+      const db = await this.dbPromise;
+      const transaction = db.transaction("vectors", "readonly");
+      const store = transaction.objectStore("vectors");
+      const vectors = await store.getAll();
+
+      vectors.forEach((entry, index) => {
+        console.log(
+          `DB Vector ${index} (binary):`,
+          [...new BigUint64Array(entry.vector.buffer)].map((v) => v.toString(2))
+        );
+      });
+
+      const wasmModule = await loadWasm();
+      const { hamming_distance, memory } = wasmModule;
+
+      if (!memory) {
+        throw new Error("WebAssembly memory is undefined.");
+      }
+
+      const wasmMemory = new Uint8Array(memory.buffer);
+      wasmMemory.set(new Uint8Array(packedQueryVector.buffer), 0);
+
+      const distances = vectors.map((entry) => {
+        const dbVector = new Uint8Array(entry.vector.buffer);
+        wasmMemory.set(dbVector, 16);
+        const distance = hamming_distance(0, 16, packedQueryVector.length * 8);
+        return { ...entry, distance };
+      });
+
+      distances.sort((a, b) => a.distance - b.distance);
+      return distances.slice(0, limit);
+    } catch (error) {
+      console.error("Error querying binary vectors:", error);
+      throw error;
     }
   }
 

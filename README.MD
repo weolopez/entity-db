@@ -129,7 +129,7 @@ Each 64-bit integer represents 64 binary values, and we use the XOR operation on
 ### Inserting Data and Generate Binarized Embeddings
 
 To insert data to be vectorized and then binarized, use _insertBinary_.
-Note: to query over binarized vectors, use _queryBinary_.
+Note: to query over binarized vectors, use _queryBinary_ or _queryBinarySIMD_.
 
 ```js
 await db.insertBinary({
@@ -137,7 +137,7 @@ await db.insertBinary({
 });
 ```
 
-### Query Binarized Embeddings (Hamming Distance)
+### (Very Fast) Query Binarized Embeddings Using Hamming Distance Over Native JS (64 bits at a time max)
 
 To query over binarized vectors use _queryBinary_.
 While cosine similarity measures the angle between two vectors in a multi-dimensional space, Hamming distance counts the number of positions where two binary vectors differ. It measures dissimilarity as a simple count of mismatches. For binarized vectors Hamming really is the tool for the job.
@@ -147,8 +147,26 @@ const results = await db.queryBinary("Find similar texts based on this query");
 console.log(results);
 ```
 
-Example of a binary query:
+Example of a binary hamming distance query over BigUint64Array (64 bits processed at a time using pure JS):
 ![EntityDB_in_action_binary](sc-binary.png)
+
+### (Insanely Fast) Query Binarized Embeddings Using Hamming Distance Over WebAssembly SIMD (+128 bits at a time, shorter CPU cicles)
+
+The WebAssembly SIMD implementation processes 128 bits per iteration (via v128.xor) compared to 64 bits per iteration in the JavaScript implementation using BigUint64Array. This alone gives a theoretical 2x speedup.
+
+However SIMD instructions execute XOR, popcount, and similar operations on multiple data lanes in parallel. This reduces the number of CPU cycles required for the same amount of work compared to sequential bitwise operations in JavaScript. SIMD in WebAssembly is likely 2x to 4x faster or more over big vectors.
+
+Check haming_distance_simd.wat for the WASM source code. Compiled using wat2wasm.
+
+```js
+const results = await db.queryBinarySIMD(
+  "Find similar texts based on this query"
+);
+console.log(results);
+```
+
+Example of a binary hamming distance query over WebAssembly SIMD (+128 bits at a time, shorter CPU cicles):
+![EntityDB_in_action_binary_wasm](sc-binary-wasm.png)
 
 ---
 

@@ -137,7 +137,9 @@ await db.insertBinary({
 });
 ```
 
-### (Very Fast) Query Binarized Embeddings Using Hamming Distance Over Native JS (64 bits at a time max)
+### (Very Fast) Query Binary Embeddings Using Hamming Distance Over Native JS (64 bits at a time max)
+
+![EntityDB_in_action_binary_wasm](binary_js.png)
 
 To query over binarized vectors use _queryBinary_.
 While cosine similarity measures the angle between two vectors in a multi-dimensional space, Hamming distance counts the number of positions where two binary vectors differ. It measures dissimilarity as a simple count of mismatches. For binarized vectors Hamming really is the tool for the job.
@@ -150,7 +152,9 @@ console.log(results);
 Example of a binary hamming distance query over BigUint64Array (64 bits processed at a time using pure JS):
 ![EntityDB_in_action_binary](sc-binary.png)
 
-### (Insanely Fast) Query Binarized Embeddings Using Hamming Distance Over WebAssembly SIMD (+128 bits at a time, shorter CPU cicles)
+### (Insanely Fast) Query Binary Embeddings Using Hamming Distance Over WebAssembly SIMD (+128 bits at a time, shorter CPU cicles)
+
+![EntityDB_in_action_binary_wasm](binary_wasm.png)
 
 The WebAssembly SIMD implementation processes 128 bits per iteration (via v128.xor) compared to 64 bits per iteration in the JavaScript implementation using BigUint64Array. This alone gives a theoretical 2x speedup.
 

@@ -133,6 +133,7 @@ const results = await db.queryBinary("Find similar texts based on this query");
 console.log(results);
 ```
 
+Example of a binary query:
 ![EntityDB_in_action_binary](sc-binary.png)
 
 ---

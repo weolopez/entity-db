@@ -49,6 +49,17 @@ const binarizeVector = (vector, threshold = null) => {
   return vector.map((val) => (val >= threshold ? 1 : 0));
 };
 
+// Function to calculate Hamming distance
+const hammingDistance = (vectorA, vectorB) => {
+  if (vectorA.length !== vectorB.length) {
+    throw new Error("Vectors must be of the same length");
+  }
+  return vectorA.reduce(
+    (distance, bit, index) => distance + (bit !== vectorB[index] ? 1 : 0),
+    0
+  );
+};
+
 class EntityDB {
   constructor({ vectorPath, model = defaultModel }) {
     this.vectorPath = vectorPath;
@@ -111,30 +122,6 @@ class EntityDB {
     }
   }
 
-  async queryBinary(queryText, { limit = 10 } = {}) {
-    try {
-      // Get embeddings and binarize them
-      const queryVector = await getEmbeddingFromText(queryText, this.model);
-      const binaryQueryVector = binarizeVector(queryVector);
-
-      const db = await this.dbPromise;
-      const transaction = db.transaction("vectors", "readonly");
-      const store = transaction.objectStore("vectors");
-      const vectors = await store.getAll();
-
-      // Calculate similarity with binary vectors
-      const similarities = vectors.map((entry) => {
-        const similarity = cosineSimilarity(binaryQueryVector, entry.vector);
-        return { ...entry, similarity };
-      });
-
-      similarities.sort((a, b) => b.similarity - a.similarity); // Sort by similarity (descending)
-      return similarities.slice(0, limit); // Return the top N results
-    } catch (error) {
-      throw new Error(`Error querying binary vectors: ${error}`);
-    }
-  }
-
   // Insert manual vectors (no embedding generation, just insert provided vectors)
   async insertManualVectors(data) {
     try {
@@ -188,6 +175,34 @@ class EntityDB {
       return similarities.slice(0, limit); // Return the top N results based on limit
     } catch (error) {
       throw new Error(`Error querying vectors: ${error}`);
+    }
+  }
+
+  //Query binarized vectors using Hamming distance nstead of cosine similarity
+  async queryBinary(queryText, { limit = 10 } = {}) {
+    try {
+      // Get embeddings and binarize them
+      const queryVector = await getEmbeddingFromText(queryText, this.model);
+      const binaryQueryVector = binarizeVector(queryVector);
+
+      const db = await this.dbPromise;
+      const transaction = db.transaction("vectors", "readonly");
+      const store = transaction.objectStore("vectors");
+      const vectors = await store.getAll();
+
+      // Calculate Hamming distance with binary vectors
+      const distances = vectors.map((entry) => {
+        const distance = hammingDistance(binaryQueryVector, entry.vector);
+        return { ...entry, distance };
+      });
+
+      // Sort by Hamming distance (ascending)
+      distances.sort((a, b) => a.distance - b.distance);
+
+      // Return the top N results based on limit
+      return distances.slice(0, limit);
+    } catch (error) {
+      throw new Error(`Error querying binary vectors: ${error}`);
     }
   }
 

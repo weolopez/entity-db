@@ -54,10 +54,16 @@ const hammingDistance = (vectorA, vectorB) => {
   if (vectorA.length !== vectorB.length) {
     throw new Error("Vectors must be of the same length");
   }
-  return vectorA.reduce(
-    (distance, bit, index) => distance + (bit !== vectorB[index] ? 1 : 0),
-    0
-  );
+  const length = vectorA.length;
+  const bitsA = new BigUint64Array(vectorA.buffer);
+  const bitsB = new BigUint64Array(vectorB.buffer);
+
+  let distance = 0n;
+  for (let i = 0; i < bitsA.length; i++) {
+    const xorResult = bitsA[i] ^ bitsB[i];
+    distance += BigInt(xorResult.toString(2).replace(/0/g, "").length); // Popcount equivalent
+  }
+  return Number(distance);
 };
 
 class EntityDB {
@@ -108,17 +114,28 @@ class EntityDB {
       if (data.text) {
         embedding = await getEmbeddingFromText(data.text, this.model);
       }
-      // Binarize the embedding
+
+      // Binarize the embedding and pack into BigUint64Array
       const binaryEmbedding = binarizeVector(embedding);
+      const packedEmbedding = new BigUint64Array(
+        new ArrayBuffer(Math.ceil(binaryEmbedding.length / 64) * 8)
+      );
+      for (let i = 0; i < binaryEmbedding.length; i++) {
+        const bitIndex = i % 64;
+        const arrayIndex = Math.floor(i / 64);
+        if (binaryEmbedding[i] === 1) {
+          packedEmbedding[arrayIndex] |= 1n << BigInt(bitIndex);
+        }
+      }
 
       const db = await this.dbPromise;
       const transaction = db.transaction("vectors", "readwrite");
       const store = transaction.objectStore("vectors");
-      const record = { vector: binaryEmbedding, ...data };
+      const record = { vector: packedEmbedding, ...data };
       const key = await store.add(record);
       return key;
     } catch (error) {
-      throw new Error(`Error inserting data: ${error}`);
+      throw new Error(`Error inserting binary data: ${error}`);
     }
   }
 
@@ -142,7 +159,7 @@ class EntityDB {
     const transaction = db.transaction("vectors", "readwrite");
     const store = transaction.objectStore("vectors");
     const vector = data[this.vectorPath];
-    const updatedData = { vector, ...data };
+    const updatedData = { ...data, [store.keyPath]: key, vector };
     await store.put(updatedData);
   }
 
@@ -185,14 +202,26 @@ class EntityDB {
       const queryVector = await getEmbeddingFromText(queryText, this.model);
       const binaryQueryVector = binarizeVector(queryVector);
 
+      // Pack the query vector into BigUint64Array
+      const packedQueryVector = new BigUint64Array(
+        new ArrayBuffer(Math.ceil(binaryQueryVector.length / 64) * 8)
+      );
+      for (let i = 0; i < binaryQueryVector.length; i++) {
+        const bitIndex = i % 64;
+        const arrayIndex = Math.floor(i / 64);
+        if (binaryQueryVector[i] === 1) {
+          packedQueryVector[arrayIndex] |= 1n << BigInt(bitIndex);
+        }
+      }
+
       const db = await this.dbPromise;
       const transaction = db.transaction("vectors", "readonly");
       const store = transaction.objectStore("vectors");
       const vectors = await store.getAll();
 
-      // Calculate Hamming distance with binary vectors
+      // Calculate Hamming distance
       const distances = vectors.map((entry) => {
-        const distance = hammingDistance(binaryQueryVector, entry.vector);
+        const distance = hammingDistance(packedQueryVector, entry.vector);
         return { ...entry, distance };
       });
 

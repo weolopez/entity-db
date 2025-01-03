@@ -62,15 +62,6 @@ await db.insert({
 });
 ```
 
-### Querying (Cosine Similarity)
-
-You can query the database by providing a text, and EntityDB will return the most similar results based on cosine similarity.
-
-```js
-const results = await db.query("Find similar texts based on this query");
-console.log(results);
-```
-
 ### Inserting Manual Vectors
 
 If you already have precomputed vectors, you can insert them directly into the database.
@@ -82,12 +73,13 @@ await db.insertManualVectors({
 });
 ```
 
-### Deleting Data
+### Querying (Cosine Similarity)
 
-You can delete a vector by its key.
+You can query the database by providing a text, and EntityDB will return the most similar results based on cosine similarity.
 
 ```js
-await db.delete(1);
+const results = await db.query("Find similar texts based on this query");
+console.log(results);
 ```
 
 ### Querying Manual Vectors
@@ -98,6 +90,25 @@ If you have precomputed vectors and want to query them directly, use the queryMa
   const queryVector = [0.1, 0.2, 0.3, ...]; // your precomputed query vector
   const results = await db.queryManualVectors(queryVector);
   console.log(results);
+```
+
+### Updating a Vector in the Database
+
+If you need to update an existing vector in the database:
+
+```js
+await db.update("1234", {
+  vector: [0.4, 0.5, 0.6], // Updated vector data
+  metadata: { name: "Updated Item" }, // Additional updated data
+});
+```
+
+### Deleting Data
+
+You can delete a vector by its key.
+
+```js
+await db.delete(1);
 ```
 
 ---
@@ -111,6 +122,9 @@ Note that this simplification can reduce the quality of the results because some
 `[ -0.020319879055023193,  0.07605013996362686, 0.020568927749991417, ...]`
 after being binarized becomes:
 `[ 0, 1, 1, ...]`
+
+For better JS processing, the binary vectors are packed into 64-bit integers (e.g., using BigUint64Array).
+Each 64-bit integer represents 64 binary values, and we use the XOR operation on 64-bit integers to find mismatched bits and then count the 1s.
 
 ### Inserting Data and Generate Binarized Embeddings
 

@@ -4,19 +4,11 @@
 
 ![EntityDB](https://raw.githubusercontent.com/babycommando/entity-db/refs/heads/main/cover.gif)
 
+## Demo: [See EntityDB in action!](https://entity-db-landing.vercel.app/)
+
 ## Overview
 
 **EntityDB** is a powerful, lightweight in-browser database designed for storing and querying vectors. It integrates seamlessly with [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) for persistent storage and [Transformers.js](https://github.com/xenova/transformers) to generate embeddings from text, allowing you to build fast and efficient search systems with state-of-the-art models. Whether you're building search engines, recommendation systems, Ai memory or any app requiring vector similarity, EntityDB has got you covered.
-
-## Features
-
-- **In-browser**: Runs entirely in the browser using IndexedDB for local storage.
-- **Seamless Integration with Transformers**: Easily generate text embeddings with Hugging Face models via Transformers.js.
-- **Cosine Similarity Search**: Efficient querying based on cosine similarity between vectors.
-- **Flexible**: Supports both automatic embedding generation and manual insertion of pre-computed embeddings.
-- **Lightweight**: No need for a server-side component or complex setup.
-
-![EntityDB_in_action](sc-db.png)
 
 ## Installation
 
@@ -37,6 +29,16 @@ pnpm add @babycommando/entity-db
 ```bash
 bun add @babycommando/entity-db
 ```
+
+## Features
+
+- **In-browser**: Runs entirely in the browser using IndexedDB for local storage.
+- **Seamless Integration with Transformers**: Easily generate text embeddings with Hugging Face models via Transformers.js.
+- **Cosine Similarity Search**: Efficient querying based on cosine similarity between vectors.
+- **Flexible**: Supports both automatic embedding generation and manual insertion of pre-computed embeddings.
+- **Lightweight**: No need for a server-side component or complex setup.
+
+![EntityDB_in_action](sc-db.png)
 
 ## Usage
 
